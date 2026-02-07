@@ -12,3 +12,7 @@ sddcmgr_defaults_run_vcfa_9x_000372: true
 # SDDC Manager Configuration
 # ENABLED or DISABLED
 sddcmgr_defaults_basic_auth: 'DISABLED'
+
+# Token Management
+# Set to true to automatically fetch bearer token from API, false to use pre-populated token from vault
+sddcmgr_defaults_fetch_token_dynamically: true
