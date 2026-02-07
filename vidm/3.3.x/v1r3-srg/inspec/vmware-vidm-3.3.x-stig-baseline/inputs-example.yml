@@ -1,5 +1,0 @@
-# Photon
-authprivlog: /var/log/messages
-
-# PostgreSQL
-clustered: false
