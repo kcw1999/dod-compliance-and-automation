@@ -1,4 +1,30 @@
 ---
+# Generate session token dynamically
+- name: Generate and get Operations session token
+  tags: always
+  when: operations_defaults_fetch_token_dynamically | bool
+  block:
+    - name: Generate session token
+      ansible.builtin.uri:
+        url: "https://{{ lookup('vars', 'ansible_host') }}/suite-api/api/auth/token/acquire"
+        method: POST
+        headers:
+          Content-Type: 'application/json'
+          Accept: 'application/json'
+        body_format: json
+        body:
+          username: "{{ lookup('vars', 'var_vault_operations_api_username') }}"
+          password: "{{ lookup('vars', 'var_vault_operations_api_password') }}"
+        validate_certs: "{{ validate_certificate_uri }}"
+      register: token_response
+      changed_when: false
+      failed_when: 
+        - token_response.status != 200
+        - token_response.status != 201
+
+    - name: Extract and save session token
+      ansible.builtin.set_fact:
+        var_vault_operations_session_token: "{{ token_response.json.token | default(token_response.json.tokenId) | default(token_response.json) | default('') }}"
 
 ###################################################################################################################################
 - name: VCFA-9X-000001

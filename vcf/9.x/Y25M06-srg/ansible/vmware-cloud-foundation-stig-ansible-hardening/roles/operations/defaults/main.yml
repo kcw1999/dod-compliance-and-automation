@@ -29,6 +29,10 @@ operations_defaults_run_vcfa_9x_000370: true
 # Session timeout value in minutes
 operations_defaults_session_timeout_minutes: '15'
 
+# Token Management
+# Set to true to automatically fetch session token from API, false to use pre-populated token from vault
+operations_defaults_fetch_token_dynamically: true
+
 # For control VCFA-9X-000363 - API currently not implemented correctly
 ## Which logs should be offloaded
 # operations_defaults_logs_to_offload: ['ANALYTICS', 'COLLECTOR', 'TOMCAT_WEBAPP', 'VPOSTGRES', 'WATCHDOG', 'OTHER',
