@@ -80,3 +80,7 @@ nsx_manager_defaults_ssh_root_login: false
 ## Enter an array of NTP servers to configure for NSX Manager
 nsx_manager_defaults_ntp_servers: []
 nsx_manager_defaults_enable_lb_fips: true
+
+# Token Management
+# Set to true to automatically fetch session tokens from API, false to use pre-populated tokens from vault
+nsx_manager_defaults_fetch_token_dynamically: true

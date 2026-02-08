@@ -1,4 +1,72 @@
 ---
+# Generate session token and JSESSIONID dynamically
+- name: Generate and get NSX Manager session tokens
+  tags: always
+  when: nsx_manager_defaults_fetch_token_dynamically | bool
+  block:
+    - name: Generate session token and JSESSIONID
+      ansible.builtin.uri:
+        url: "https://{{ lookup('vars', 'ansible_host') }}/api/session/create"
+        method: POST
+        headers:
+          Content-Type: 'application/x-www-form-urlencoded'
+        body_format: form-urlencoded
+        body:
+          j_username: "{{ lookup('vars', 'var_vault_nsx_manager_' + inventory_hostname + '_api_username') }}"
+          j_password: "{{ lookup('vars', 'var_vault_nsx_manager_' + inventory_hostname + '_api_password') }}"
+        validate_certs: "{{ validate_certificate_uri }}"
+        return_content: false
+        status_code:
+          - 200
+          - 201
+      register: token_response
+      changed_when: false
+
+    - name: Extract JSESSIONID from cookies dict
+      ansible.builtin.set_fact:
+        jsession_id_raw: "{{ token_response.cookies.JSESSIONID }}"
+      when: 
+        - token_response.cookies is defined
+        - token_response.cookies.JSESSIONID is defined
+
+    - name: Extract JSESSIONID from Set-Cookie header
+      ansible.builtin.set_fact:
+        jsession_id_raw: "{{ token_response.headers['set-cookie'] | regex_search('JSESSIONID=([^;]+)', '\\1') | default('') }}"
+      when: 
+        - jsession_id_raw is not defined or jsession_id_raw | default('') == ''
+        - token_response.headers is defined
+        - token_response.headers['set-cookie'] is defined
+
+    - name: Extract JSESSIONID from Set-Cookie header (list format)
+      ansible.builtin.set_fact:
+        jsession_id_raw: "{{ (token_response.headers['set-cookie'] | select('match', '.*JSESSIONID=.*') | map('regex_search', 'JSESSIONID=([^;]+)', '\\1') | list | first) | default('') }}"
+      when: 
+        - jsession_id_raw is not defined or jsession_id_raw | default('') == ''
+        - token_response.headers is defined
+        - token_response.headers['set-cookie'] is defined
+        - token_response.headers['set-cookie'] is iterable
+        - token_response.headers['set-cookie'] is not string
+
+    - name: Format JSESSIONID cookie value
+      ansible.builtin.set_fact:
+        jsession_id_formatted: "JSESSIONID={{ jsession_id_raw }}"
+      when: jsession_id_raw is defined and jsession_id_raw | default('') != ''
+
+    - name: Extract X-XSRF-TOKEN from response headers
+      ansible.builtin.set_fact:
+        xsrf_token: "{{ token_response.headers['x-xsrf-token'] | default('') }}"
+      when: token_response.headers is defined
+
+    - name: Save JSESSIONID and session token as facts
+      ansible.builtin.set_fact:
+        "var_vault_nsx_manager_{{ inventory_hostname }}_jsession_id": "{{ jsession_id_formatted }}"
+        "var_vault_nsx_manager_{{ inventory_hostname }}_session_token": "{{ xsrf_token }}"
+      when:
+        - jsession_id_formatted is defined
+        - xsrf_token is defined
+        - jsession_id_formatted | default('') != ''
+        - xsrf_token | default('') != ''
+
 ###################################################################################################################################
 - name: VCFN-9X-000007
   tags: [VCFN-9X-000007]
