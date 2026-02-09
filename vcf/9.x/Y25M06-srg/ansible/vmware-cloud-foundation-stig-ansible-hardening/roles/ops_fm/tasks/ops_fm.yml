@@ -1,4 +1,16 @@
 ---
+# Generate Basic auth token dynamically (base64 encoded username:password)
+- name: Generate and get Operations Fleet Management Basic auth token
+  tags: always
+  when: ops_fm_defaults_fetch_token_dynamically | bool
+  block:
+    - name: Generate base64 encoded credentials
+      ansible.builtin.set_fact:
+        credentials_string: "{{ lookup('vars', 'var_vault_operations_fm_api_username') }}:{{ lookup('vars', 'var_vault_operations_fm_api_password') }}"
+
+    - name: Encode credentials to base64
+      ansible.builtin.set_fact:
+        var_vault_operations_fm_api_token: "{{ credentials_string | b64encode }}"
 
 ###################################################################################################################################
 - name: VCFA-9X-000371

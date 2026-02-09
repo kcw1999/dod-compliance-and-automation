@@ -9,3 +9,7 @@ ops_fm_defaults_run_vcfa_9x_000371: true
 
 # NTP Servers - provide a comma separated list with no spaces (i.e., '10.0.0.1,10.0.0.2')
 ops_fm_defaults_time_servers: ''
+
+# Token Management
+# Set to true to automatically generate Basic auth token (base64 encoded username:password), false to use pre-populated token from vault
+ops_fm_defaults_fetch_token_dynamically: true
