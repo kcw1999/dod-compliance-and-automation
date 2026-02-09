@@ -1,4 +1,42 @@
 ---
+# Generate session token dynamically
+- name: Generate and get Automation session token
+  tags: always
+  when: automation_defaults_fetch_token_dynamically | bool
+  block:
+    - name: Generate base64 encoded credentials for Basic auth
+      ansible.builtin.set_fact:
+        credentials_string: "{{ lookup('vars', 'var_vault_automation_api_username') }}:{{ lookup('vars', 'var_vault_automation_api_password') }}"
+
+    - name: Encode credentials to base64
+      ansible.builtin.set_fact:
+        basic_auth_token: "{{ credentials_string | b64encode }}"
+
+    - name: Generate session token
+      ansible.builtin.uri:
+        url: "https://{{ lookup('vars', 'ansible_host') }}/cloudapi/1.0.0/sessions/provider"
+        method: POST
+        headers:
+          Authorization: "Basic {{ basic_auth_token }}"
+          Accept: "{{ automation_defaults_api_version }}"
+        validate_certs: "{{ validate_certificate_uri }}"
+        return_content: false
+      register: token_response
+      changed_when: false
+      failed_when: 
+        - token_response.status != 200
+        - token_response.status != 201
+
+    - name: Extract access token from response headers
+      ansible.builtin.set_fact:
+        access_token: "{{ token_response.headers.get('x-vmware-vcloud-access-token', token_response.headers.get('X-Vmware-Vcloud-Access-Token', '')) | default('') }}"
+      when: token_response.headers is defined
+
+    - name: Save session token as fact
+      ansible.builtin.set_fact:
+        var_vault_automation_session_token: "{{ access_token }}"
+      when: access_token is defined and access_token | default('') != ''
+
 ###################################################################################################################################
 - name: VCFA-9X-000104
   tags: [VCFA-9X-000104]

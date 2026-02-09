@@ -14,3 +14,7 @@ automation_defaults_api_version: 'application/*;version=40.0'
 automation_defaults_disable_branding_without_login: 'true'
 ## Enter an list of approved feature flags. Use the display name for the value.
 automation_defaults_approved_feature_flags: []
+
+# Token Management
+# Set to true to automatically fetch session token from API, false to use pre-populated token from vault
+automation_defaults_fetch_token_dynamically: true
