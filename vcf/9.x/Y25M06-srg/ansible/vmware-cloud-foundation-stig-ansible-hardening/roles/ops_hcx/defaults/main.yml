@@ -10,3 +10,7 @@ ops_hcx_defaults_run_vcfa_9x_000385: true
 
 # Provide an array of authorized NTP servers
 ops_hcx_defaults_time_servers: []
+
+# Token Management
+# Set to true to automatically generate Basic auth token (base64 encoded username:password), false to use pre-populated token from vault
+ops_hcx_defaults_fetch_token_dynamically: true

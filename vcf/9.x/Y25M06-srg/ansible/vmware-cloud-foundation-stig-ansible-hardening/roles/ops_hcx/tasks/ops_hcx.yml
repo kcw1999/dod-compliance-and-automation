@@ -1,4 +1,17 @@
 ---
+# Generate Basic auth token dynamically (base64 encoded username:password)
+- name: Generate and get Operations HCX Basic auth token
+  tags: always
+  when: ops_hcx_defaults_fetch_token_dynamically | bool
+  block:
+    - name: Generate base64 encoded credentials
+      ansible.builtin.set_fact:
+        credentials_string: "{{ lookup('vars', 'var_vault_operations_hcx_api_username') }}:{{ lookup('vars', 'var_vault_operations_hcx_api_password') }}"
+
+    - name: Encode credentials to base64
+      ansible.builtin.set_fact:
+        var_vault_operations_hcx_session_token: "{{ credentials_string | b64encode }}"
+
 ###################################################################################################################################
 - name: VCFA-9X-000382
   tags: [VCFA-9X-000382]
