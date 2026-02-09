@@ -1,4 +1,47 @@
 ---
+# Generate session token dynamically
+- name: Generate and get Operations for Networks session token
+  tags: always
+  when: ops_net_defaults_fetch_token_dynamically | bool
+  block:
+    - name: Generate session token
+      ansible.builtin.uri:
+        url: "https://{{ lookup('vars', 'ansible_host') }}/api/ni/auth/token"
+        method: POST
+        headers:
+          Content-Type: 'application/json'
+          Accept: 'application/json'
+        body_format: json
+        body:
+          username: "{{ lookup('vars', 'var_vault_operations_networks_api_username') }}"
+          password: "{{ lookup('vars', 'var_vault_operations_networks_api_password') }}"
+          domain:
+            domain_type: "LOCAL"
+            value: ""
+        validate_certs: "{{ validate_certificate_uri }}"
+        return_content: false
+      register: token_response
+      changed_when: false
+      failed_when: 
+        - token_response.status != 200
+        - token_response.status != 201
+
+    - name: Extract sessionID from response headers
+      ansible.builtin.set_fact:
+        session_id: "{{ token_response.headers.get('sessionid', token_response.headers.get('sessionID', '')) | default('') }}"
+      when: token_response.headers is defined
+
+    - name: Extract sessionID from response (alternative - check JSON body)
+      ansible.builtin.set_fact:
+        session_id: "{{ token_response.json.sessionId | default(token_response.json.sessionID) | default('') }}"
+      when: 
+        - session_id is not defined or session_id | default('') == ''
+        - token_response.json is defined
+
+    - name: Save session token as fact
+      ansible.builtin.set_fact:
+        var_vault_operations_networks_api_token: "{{ session_id }}"
+      when: session_id is defined and session_id | default('') != ''
 
 ###################################################################################################################################
 - name: VCFA-9X-000024

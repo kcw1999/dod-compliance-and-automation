@@ -29,3 +29,7 @@ ops_net_defaults_syslog_server:
   - server: ''
     port: ''
     protocol: 'UDP'
+
+# Token Management
+# Set to true to automatically fetch session token from API, false to use pre-populated token from vault
+ops_net_defaults_fetch_token_dynamically: true
